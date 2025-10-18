@@ -1,3 +1,5 @@
+// 
+
 use clap::Parser;
 use std::{
     fs::File,
@@ -8,6 +10,7 @@ use std::{
         Arc,
     },
     time::{Duration, Instant},
+    process,
 };
 use wayland_client::{
     protocol::{wl_pointer, wl_registry},
@@ -21,15 +24,16 @@ const BTN_LEFT: u32 = 0x110;
 const BTN_RIGHT: u32 = 0x111;
 const BTN_MIDDLE: u32 = 0x112;
 const START_KEY: u16 = 60; // F2
+const TERM_KEY: u16 = 61; // F3
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Clicks per second
-    #[arg(default_value_t = 20)]
+    /// Cps
+    #[arg(default_value_t = 10)]
     clicks_per_second: u32,
 
-    /// Which mouse button to click (0 for left, 1 for right, 2 for middle)
+    /// Click options (0 for left, 1 for right, 2 for middle)
     #[arg(short, long, default_value_t = 0)]
     button: u32,
 
@@ -146,6 +150,9 @@ fn get_keyboard_input(fd: &File) -> i32 {
 
     if n as usize == size && ev.type_ == 1 && ev.code == START_KEY {
         return ev.value;
+    } else if ev.code == TERM_KEY {
+        println!("Exiting...");
+        process::exit(0);
     }
 
     -1
