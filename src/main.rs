@@ -30,7 +30,7 @@ const TERM_KEY: u16 = 61; // F3
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Cps
-    #[arg(default_value_t = 10)]
+    #[arg(default_value_t = 20)]
     clicks_per_second: u32,
 
     /// Click options (0 for left, 1 for right, 2 for middle)
