@@ -17,6 +17,9 @@ Options:
   -h, --help             Print help
   -V, --version          Print version
 
+F2 Start
+F3 Stop
+
 ---
 
 ### Build
