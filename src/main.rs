@@ -21,8 +21,26 @@ use wayland_protocols_wlr::virtual_pointer::v1::client::{
 const BTN_LEFT: u32 = 0x110;
 const BTN_RIGHT: u32 = 0x111;
 const BTN_MIDDLE: u32 = 0x112;
-const START_KEY: u16 = 60; // F2
-const TERM_KEY: u16 = 61; // F3
+
+fn parse_fkey(s: &str) -> Result<u16, String> {
+    let key = s.to_uppercase();
+    if !key.starts_with('F') {
+        return Err(format!("'{}' is not a valid F-key (F1-F12)", s));
+    }
+
+    let num = key[1..].parse::<u16>().map_err(|_| {
+        format!("'{}' is not a valid F-key (F1-F12)", s)
+    })?;
+
+    let code = match num {
+        1..=10 => 58 + num, // F1=59 .. F10=68
+        11 => 87,            // F11
+        12 => 88,            // F12, wtf why??????
+        _ => return Err(format!("'{}' is not a valid F-key (F1-F12)", s)),
+    };
+
+    Ok(code)
+}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -38,6 +56,14 @@ struct Args {
     /// Toggle the autoclicker on keypress
     #[arg(short, long)]
     toggle: bool,
+
+    /// Start hotkey (F1-F12)
+    #[arg(long, default_value = "F2", value_parser = parse_fkey)]
+    startkey: u16,
+
+    /// Stop hotkey (F1-F12)
+    #[arg(long, default_value = "F3", value_parser = parse_fkey)]
+    stopkey: u16,
 }
 
 struct State {
@@ -133,7 +159,7 @@ fn get_keyboard_devices() -> io::Result<Vec<String>> {
     Ok(devices)
 }
 
-fn get_keyboard_input(fd: &File) -> i32 {
+fn get_keyboard_input(fd: &File, start_key: u16, stop_key: u16) -> i32 {
     let mut ev: libc::input_event = unsafe { std::mem::zeroed() };
     let size = std::mem::size_of::<libc::input_event>();
     let n = unsafe { libc::read(fd.as_raw_fd(), &mut ev as *mut _ as *mut libc::c_void, size) };
@@ -146,9 +172,9 @@ fn get_keyboard_input(fd: &File) -> i32 {
         return -1;
     }
 
-    if n as usize == size && ev.type_ == 1 && ev.code == START_KEY {
+    if n as usize == size && ev.type_ == 1 && ev.code == start_key {
         return ev.value;
-    } else if ev.code == TERM_KEY {
+    } else if ev.code == stop_key {
         println!("Exiting...");
         process::exit(0);
     }
@@ -235,7 +261,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     while running.load(Ordering::SeqCst) {
         for fd in &state.kbd_fds {
-            let key_state = get_keyboard_input(fd);
+            let key_state = get_keyboard_input(fd, args.startkey, args.stopkey);
             if key_state != -1 {
                 if args.toggle && key_state == 1 {
                     state.key_pressed = !state.key_pressed;

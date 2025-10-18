@@ -6,20 +6,22 @@ This project is a Rust adaptation of an original C program by [phonetic112](http
 ---
 
 ### Usage
-Usage: wayland_autoclicker [CLICKS_PER_SECOND] [OPTIONS]
+Usage: wayland_autoclicker [OPTIONS] [CLICKS_PER_SECOND]
 
 Arguments:
-  [CLICKS_PER_SECOND]  Clicks per second [default: 20]
+  [CLICKS_PER_SECOND]  Cps [default: 20]
 
 Options:
-  -b, --button <BUTTON>  Which mouse button to click (0 for left, 1 for right, 2 for middle) [default: 0]
-  -t, --toggle           Toggle the autoclicker on keypress
-  -h, --help             Print help
-  -V, --version          Print version
+  -b, --button <BUTTON>      Click options (0 for left, 1 for right, 2 for middle) [default: 0]
+  -t, --toggle               Toggle the autoclicker on keypress
+      --startkey <STARTKEY>  Start hotkey (F1-F12) [default: F2]
+      --stopkey <STOPKEY>    Stop hotkey (F1-F12) [default: F3]
+  -h, --help                 Print help
 
-F2 Start
-F3 Stop
-
+Example:
+```bash
+  wayland_autoclicker -t --startkey "F4" --stopkey "F6"
+```
 ---
 
 ### Build
