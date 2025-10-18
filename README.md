@@ -17,9 +17,9 @@ Options:
 
   -t, --toggle               Toggle the autoclicker on keypress
 
-      --startkey <STARTKEY>  Start hotkey (F1-F12) [default: F2]
+  --startkey <STARTKEY>  Start hotkey (F1-F12) [default: F2]
 
-      --stopkey <STOPKEY>    Stop hotkey (F1-F12) [default: F3]
+  --stopkey <STOPKEY>    Stop hotkey (F1-F12) [default: F3]
 
   -h, --help                 Print help
 
