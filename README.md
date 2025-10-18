@@ -12,10 +12,15 @@ Arguments:
   [CLICKS_PER_SECOND]  Cps [default: 20]
 
 Options:
+
   -b, --button <BUTTON>      Click options (0 for left, 1 for right, 2 for middle) [default: 0]
+
   -t, --toggle               Toggle the autoclicker on keypress
+
       --startkey <STARTKEY>  Start hotkey (F1-F12) [default: F2]
+
       --stopkey <STOPKEY>    Stop hotkey (F1-F12) [default: F3]
+
   -h, --help                 Print help
 
 Example:
