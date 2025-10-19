@@ -1,16 +1,18 @@
 use clap::Parser;
-use std::{
+pub(crate) use std::{
     fs::File,
     io::{self},
     os::unix::io::AsRawFd,
+    process,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
     },
     time::{Duration, Instant},
 };
-use wayland_client::{
+pub(crate) use wayland_client::{
     protocol::{wl_pointer, wl_registry},
+    Connection, Dispatch, QueueHandle,
 };
 use wayland_protocols_wlr::virtual_pointer::v1::client::{
     zwlr_virtual_pointer_manager_v1, zwlr_virtual_pointer_v1,
@@ -26,14 +28,14 @@ fn parse_fkey(s: &str) -> Result<u16, String> {
         return Err(format!("'{}' is not a valid F-key (F1-F12)", s));
     }
 
-    let num = key[1..].parse::<u16>().map_err(|_| {
-        format!("'{}' is not a valid F-key (F1-F12)", s)
-    })?;
+    let num = key[1..]
+        .parse::<u16>()
+        .map_err(|_| format!("'{}' is not a valid F-key (F1-F12)", s))?;
 
     let code = match num {
         1..=10 => 58 + num, // F1=59 .. F10=68
-        11 => 87,            // F11
-        12 => 88,            // F12, wtf why??????
+        11 => 87,           // F11
+        12 => 88,           // F12, wtf why??????
         _ => return Err(format!("'{}' is not a valid F-key (F1-F12)", s)),
     };
 
@@ -55,13 +57,13 @@ struct Args {
     #[arg(short, long)]
     toggle: bool,
 
-    /// Start hotkey (F1-F12)
+    /// Toggle hotkey (F1-F12)
     #[arg(long, default_value = "F2", value_parser = parse_fkey)]
-    startkey: u16,
+    togglekey: u16,
 
-    /// Stop hotkey (F1-F12)
+    /// term hotkey (F1-F12)
     #[arg(long, default_value = "F3", value_parser = parse_fkey)]
-    stopkey: u16,
+    termkey: u16,
 }
 
 struct State {
@@ -157,7 +159,7 @@ fn get_keyboard_devices() -> io::Result<Vec<String>> {
     Ok(devices)
 }
 
-fn get_keyboard_input(fd: &File, start_key: u16, stop_key: u16) -> i32 {
+fn get_keyboard_input(fd: &File, toggle_key: u16, term_key: u16) -> i32 {
     let mut ev: libc::input_event = unsafe { std::mem::zeroed() };
     let size = std::mem::size_of::<libc::input_event>();
     let n = unsafe { libc::read(fd.as_raw_fd(), &mut ev as *mut _ as *mut libc::c_void, size) };
@@ -170,9 +172,9 @@ fn get_keyboard_input(fd: &File, start_key: u16, stop_key: u16) -> i32 {
         return -1;
     }
 
-    if n as usize == size && ev.type_ == 1 && ev.code == start_key {
+    if n as usize == size && ev.type_ == 1 && ev.code == toggle_key {
         return ev.value;
-    } else if ev.code == stop_key {
+    } else if ev.code == term_key {
         println!("Exiting...");
         process::exit(0);
     }
@@ -259,7 +261,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     while running.load(Ordering::SeqCst) {
         for fd in &state.kbd_fds {
-            let key_state = get_keyboard_input(fd, args.startkey, args.stopkey);
+            let key_state = get_keyboard_input(fd, args.togglekey, args.termkey);
             if key_state != -1 {
                 if args.toggle && key_state == 1 {
                     state.key_pressed = !state.key_pressed;
