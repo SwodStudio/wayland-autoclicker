@@ -8,11 +8,9 @@ use std::{
         Arc,
     },
     time::{Duration, Instant},
-    process,
 };
 use wayland_client::{
     protocol::{wl_pointer, wl_registry},
-    Connection, Dispatch, QueueHandle,
 };
 use wayland_protocols_wlr::virtual_pointer::v1::client::{
     zwlr_virtual_pointer_manager_v1, zwlr_virtual_pointer_v1,
