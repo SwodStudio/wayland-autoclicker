@@ -3,6 +3,8 @@
 A simple and lightweight auto-clicker for Wayland-based Linux environments, written in Rust.  
 This project is a Rust adaptation of an original C program by [phonetic112](https://github.com/phonetic112/wl-clicker) under the MIT License.
 
+The compositor must support wlr-virtual-pointer for it to run.
+
 ---
 
 ### Usage
